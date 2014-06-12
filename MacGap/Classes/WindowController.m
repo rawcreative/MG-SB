@@ -36,7 +36,7 @@
 
 @implementation WindowController
 
-@synthesize webView, url, initialized, webViewDelegate, jsContext;
+@synthesize webView, url, initialized, webViewDelegate, jsContext, sourceList;
 
 
 - (id)initWithWindow:(NSWindow *)aWindow
@@ -53,7 +53,6 @@
     [super windowDidLoad];
  
     [self.webView setMainFrameURL:[self.url absoluteString]];
-   
     
 }
 
@@ -122,7 +121,61 @@
     self.pluginObjects = [[NSMutableDictionary alloc] initWithCapacity:20];
     
     
+    NSDictionary* sourceData = @{
+                                  @"itemLabel" : @"SECTION 1",
+                                  @"isParent" : @YES,
+                                  @"children" : @[
+                                          @{@"itemLabel" : @"One", @"itemImage" : @"", @"children" : @[]},
+                                          @{@"itemLabel" : @"Two",  @"itemImage" : @"", @"children" : @[]},
+                                          @{@"itemLabel" : @"Three",  @"itemImage" : @"",  @"children" : @[]}
+                                          ]
 
+                                  };
+    NSDictionary* sourceData2 = @{
+                                 @"itemLabel" : @"SECTION 2",
+                                 @"isParent" : @YES,
+                                 @"children" : @[
+                                         @{@"itemLabel" : @"One", @"children" : @[]},
+                                                                                 ]
+                                 
+                                 };
+
+    
+    self.sourceList = @[ sourceData, sourceData2 ];
+
+}
+- (NSView *)outlineView:(NSOutlineView *)outlineView
+     viewForTableColumn:(NSTableColumn *)tableColumn
+                   item:(id)item
+{
+    NSTableCellView *view = nil;
+    
+    NSTreeNode *node = item;
+//    NSLog(@"%@", node.representedObject);
+    if ([node.representedObject valueForKey:@"isParent"]) {
+        view = [outlineView makeViewWithIdentifier:@"HeaderCell" owner:self];
+    } else {
+        view = [outlineView makeViewWithIdentifier:@"DataCell" owner:self];
+    }
+    return view;
+    //return [outlineView makeViewWithIdentifier:@"DataCell" owner:self];
+}
+- (BOOL)outlineView:(NSOutlineView *)outlineView isGroupItem:(id)item{
+    // This converts a group to a header which influences its style
+    NSTreeNode *node = item;
+
+    return [node.representedObject valueForKey:@"isParent"] ? YES : NO;
+}
+
+- (BOOL)outlineView:(NSOutlineView *)outlineView shouldSelectItem:(id)item{
+    NSTreeNode *node = item;
+    
+    return [node.representedObject valueForKey:@"isParent"] ? NO : YES;
+}
+- (void)outlineViewSelectionDidChange:(NSNotification *)notification {
+    NSOutlineView* outlineView = notification.object;
+    NSString* label = [[[outlineView itemAtRow:[outlineView selectedRow]] representedObject] valueForKey:@"itemLabel"];
+    [Event triggerEvent:@"sideBaritemClicked" withArgs:@{@"item" : label} forWebView:webView];
 }
 
 - (void) setWindowParams

@@ -27,7 +27,7 @@
 @property (retain) WebView* webView;
 @property (strong) IBOutlet NSMenu *mainMenu;
 @property (retain) WebViewDelegate* webViewDelegate;
-
+@property (retain) id sourceList;
 @property (retain) NSURL* url;
 
 @property (nonatomic, readonly) NSString* userAgent;
